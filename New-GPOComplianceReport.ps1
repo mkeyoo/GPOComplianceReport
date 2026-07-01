@@ -113,6 +113,228 @@ function Get-AdministrativeTemplates {
     return $policies
 }
 
+function Write-GPOHtmlReport {
+
+    param(
+        $General,
+        $Links,
+        $Policies,
+        $OutputPath
+    )
+
+    $html = @"
+
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8">
+
+<title>$($General.Name)</title>
+
+<style>
+
+body {
+    font-family: Segoe UI, Arial;
+    margin: 20px;
+}
+
+h1 {
+    border-bottom: 2px solid black;
+}
+
+h2 {
+    margin-top: 30px;
+    border-bottom: 1px solid gray;
+}
+
+h3 {
+    margin-left: 20px;
+}
+
+h4 {
+    margin-left: 40px;
+}
+
+.policy {
+    margin-left: 60px;
+    margin-bottom: 15px;
+    padding: 10px;
+    border-left: 3px solid #888;
+}
+
+.setting {
+    margin-left: 20px;
+}
+
+.enabled {
+    color: green;
+    font-weight: bold;
+}
+
+.disabled {
+    color: red;
+    font-weight: bold;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+th, td {
+    border: 1px solid #ccc;
+    padding: 5px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+"@
+
+    $html += "<h1>$($General.Name)</h1>"
+
+    #
+    # General
+    #
+
+    $html += "<h2>General</h2>"
+
+    $html += @"
+
+<table>
+
+<tr><th>Owner</th><td>$($General.Owner)</td></tr>
+
+<tr><th>Created</th><td>$($General.Created)</td></tr>
+
+<tr><th>Modified</th><td>$($General.Modified)</td></tr>
+
+<tr><th>Status</th><td>$($General.Status)</td></tr>
+
+</table>
+
+"@
+
+    #
+    # Links
+    #
+
+    $html += "<h2>Links</h2>"
+
+    $html += @"
+
+<table>
+
+<tr>
+    <th>Name</th>
+    <th>Path</th>
+    <th>Enabled</th>
+    <th>Enforced</th>
+</tr>
+
+"@
+
+    foreach($Link in $Links)
+    {
+        $html += @"
+
+<tr>
+    <td>$($Link.Name)</td>
+    <td>$($Link.Path)</td>
+    <td>$($Link.Enabled)</td>
+    <td>$($Link.Enforced)</td>
+</tr>
+
+"@
+    }
+
+    $html += "</table>"
+
+    #
+    # Policies
+    #
+
+    $html += "<h2>Computer Configuration</h2>"
+
+    $categories = $Policies |
+        Group-Object Category
+
+    foreach($Category in $categories)
+    {
+        $html += "<h3>$($Category.Name)</h3>"
+
+        $subCategories =
+            $Category.Group |
+            Group-Object SubCategory
+
+        foreach($SubCategory in $subCategories)
+        {
+            $html += "<h4>$($SubCategory.Name)</h4>"
+
+            foreach($Policy in $SubCategory.Group)
+            {
+                $stateClass = switch($Policy.State)
+                {
+                    "Enabled" {"enabled"}
+                    "Disabled" {"disabled"}
+                    default {""}
+                }
+
+                $html += @"
+
+<div class='policy'>
+
+<b>$($Policy.Name)</b>
+
+<br>
+
+<span class='$stateClass'>
+$($Policy.State)
+</span>
+
+"@
+
+                foreach($Setting in $Policy.Settings)
+                {
+                    $html += @"
+
+<div class='setting'>
+
+<b>$($Setting.Name)</b>
+
+<br>
+
+$($Setting.Value)
+
+</div>
+
+"@
+                }
+
+                $html += "</div>"
+            }
+        }
+    }
+
+    $html += @"
+
+</body>
+
+</html>
+
+"@
+
+    $html |
+        Set-Content `
+        -Path $OutputPath `
+        -Encoding UTF8
+}
+
 $Policies | Format-List * | Out-String | Write-Host
 
 [xml]$xml = Get-Content $XmlPath
@@ -191,3 +413,18 @@ foreach($Policy in $Policies)
         }
     }
 }
+
+$OutputFile =
+    Join-Path `
+        $PSScriptRoot `
+        "Report.html"
+
+Write-GPOHtmlReport `
+    -General $General `
+    -Links $Links `
+    -Policies $Policies `
+    -OutputPath $OutputFile
+
+Write-Host ""
+Write-Host "HTML report written to:"
+Write-Host $OutputFile
