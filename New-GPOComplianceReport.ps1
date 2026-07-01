@@ -87,53 +87,39 @@ function Get-AdministrativeTemplates {
 
             $category = $Policy.Category -split '/'
 
+            $subCategory = $null
+
+            if ($category.Count -gt 1)
+            {
+                $subCategory = $category[1]
+            }
             $policies += [PSCustomObject]@{
 
-                Category = $category[0]
+                Category    = $category[0]
 
-                SubCategory =
-                    if($category.Count -gt 1)
-                    {
-                        $category[1]
-                    
+                SubCategory = $subCategory
 
-                Name = $Policy.Name
+                Name        = $Policy.Name
 
-                State = $Policy.State
+                State       = $Policy.State
 
-                Explain = $Policy.Explain
+                Explain     = $Policy.Explain
 
-                Settings = $settings
+                Settings    = $settings
             }
         }
     }
 
     return $policies
-}}
-
-$Policies = Get-AdministrativeTemplates $xml
-
-Write-Host ""
-Write-Host "POLICIES"
-Write-Host "========"
+}
 
 $Policies | Format-List * | Out-String | Write-Host
 
 [xml]$xml = Get-Content $XmlPath
 
-Write-Host "XmlPath: [$XmlPath]"
-
-Write-Host "File exists: $(Test-Path $XmlPath)"
-
-$file = Get-Item $XmlPath -ErrorAction SilentlyContinue
-
-if ($file.Length -eq 0)
+if (!(Test-Path $XmlPath))
 {
-    throw "XML file is empty: $XmlPath"
-}
-
-if ($file) {
-    Write-Host "File size: $($file.Length)"
+    throw "File not found: $XmlPath"
 }
 
 $file = Get-Item $XmlPath
@@ -159,35 +145,9 @@ catch
     throw "Failed to parse XML: $($_.Exception.Message)"
 }
 
-$raw = Get-Content $XmlPath -Raw
-
-Write-Host "Raw length: $($raw.Length)"
-
-Write-Host "First 100 chars:"
-Write-Host ($raw.Substring(0,[Math]::Min(100,$raw.Length)))
-
-[xml]$xml = $raw
-
-Write-Host "XML object is null: $($null -eq $xml)"
-
-if ($xml) {
-    Write-Host "Root element: $($xml.DocumentElement.Name)"
-}
-
 $General = Get-GPOGeneral $xml
 $Links = Get-GPOLinks $xml
-
-Write-Host ""
-Write-Host "GENERAL OBJECT"
-Write-Host "=============="
-
-$General | Format-List * | Out-String | Write-Host
-
-Write-Host ""
-Write-Host "LINK OBJECTS"
-Write-Host "============"
-
-$Links | Format-List * | Out-String | Write-Host
+$Policies = Get-AdministrativeTemplates $xml
 
 Write-Host ""
 Write-Host "GENERAL"
@@ -200,3 +160,34 @@ Write-Host "LINKS"
 Write-Host "-----"
 
 $Links | Format-Table
+
+Write-Host ""
+Write-Host "POLICIES"
+Write-Host "========"
+
+$Policies | Format-List * | Out-String | Write-Host
+
+foreach($Policy in $Policies)
+{
+    Write-Host ""
+    Write-Host "----------------------------------"
+
+    Write-Host "Category:    $($Policy.Category)"
+
+    Write-Host "SubCategory: $($Policy.SubCategory)"
+
+    Write-Host "Policy:      $($Policy.Name)"
+
+    Write-Host "State:       $($Policy.State)"
+
+    if($Policy.Settings.Count)
+    {
+        Write-Host ""
+        Write-Host "Settings:"
+
+        foreach($Setting in $Policy.Settings)
+        {
+            Write-Host "    $($Setting.Name) = $($Setting.Value)"
+        }
+    }
+}
