@@ -61,6 +61,52 @@ function Get-GPOLinks {
     }
 }
 
+function Get-GPOSecurityFiltering {
+
+    param([xml]$Xml)
+
+    $results = @()
+
+    foreach($Permission in
+        $Xml.GPO.SecurityDescriptor.Permissions.TrusteePermissions)
+    {
+        if($Permission.Standard.GPOGroupedAccessEnum -eq
+            "Apply Group Policy")
+        {
+            $results +=
+                $Permission.Trustee.Name.InnerText
+        }
+    }
+
+    return $results
+}
+
+function Get-GPODelegation {
+
+    param([xml]$Xml)
+
+    $results = @()
+
+    foreach($Permission in
+        $Xml.GPO.SecurityDescriptor.Permissions.TrusteePermissions)
+    {
+        $results += [PSCustomObject]@{
+
+            Trustee =
+                $Permission.Trustee.Name.InnerText
+
+            Permission =
+                $Permission.Standard.
+                    GPOGroupedAccessEnum
+
+            Inherited =
+                $Permission.Inherited
+        }
+    }
+
+    return $results
+}
+
 function Get-AdministrativeTemplates {
 
     param([xml]$Xml)
@@ -95,6 +141,8 @@ function Get-AdministrativeTemplates {
             }
             $policies += [PSCustomObject]@{
 
+                Type        = "AdministrativeTemplate"
+                
                 Category    = $category[0]
 
                 SubCategory = $subCategory
@@ -118,6 +166,8 @@ function Write-GPOHtmlReport {
     param(
         $General,
         $Links,
+        $SecurityFiltering,
+        $Delegation,
         $Policies,
         $OutputPath
     )
@@ -159,10 +209,22 @@ h4 {
 }
 
 .policy {
-    margin-left: 60px;
-    margin-bottom: 15px;
+    margin-left: 40px;
+    margin-top: 10px;
+    margin-bottom: 10px;
     padding: 10px;
-    border-left: 3px solid #888;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+summary {
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.setting {
+    margin-left: 20px;
+    margin-top: 5px;
 }
 
 .setting {
@@ -197,6 +259,70 @@ th, td {
 "@
 
     $html += "<h1>$($General.Name)</h1>"
+
+    $enabledPolicies =
+    ($Policies |
+        Where-Object State -eq "Enabled").Count
+
+$disabledPolicies =
+    ($Policies |
+        Where-Object State -eq "Disabled").Count
+
+$configuredSettings = 0
+
+foreach($Policy in $Policies)
+{
+    $configuredSettings +=
+        $Policy.Settings.Count
+}
+
+$html += @"
+
+<h2>Summary</h2>
+
+<table>
+
+<tr>
+    <th>Generated</th>
+    <td>$(Get-Date)</td>
+</tr>
+
+<tr>
+    <th>Policy Count</th>
+    <td>$($Policies.Count)</td>
+</tr>
+
+<tr>
+    <th>Configured Settings</th>
+    <td>$configuredSettings</td>
+</tr>
+
+<tr>
+    <th>Enabled Policies</th>
+    <td>$enabledPolicies</td>
+</tr>
+
+<tr>
+    <th>Disabled Policies</th>
+    <td>$disabledPolicies</td>
+</tr>
+
+<tr>
+    <th>Links</th>
+    <td>$($Links.Count)</td>
+</tr>
+
+<tr>
+    <th>Enforced Links</th>
+    <td>$(
+        ($Links |
+            Where-Object Enforced).Count
+    )</td>
+</tr>
+
+</table>
+
+"@
 
     #
     # General
@@ -252,8 +378,71 @@ th, td {
 
 "@
     }
+   
+    #
+    # Security Filtering
+    #
+
+$html += "<h2>Security Filtering</h2>"
+
+if($SecurityFiltering.Count)
+{
+    $html += "<ul>"
+
+    foreach($Item in $SecurityFiltering)
+    {
+        $html += "<li>$Item</li>"
+    }
+
+    $html += "</ul>"
+}
+else
+{
+    $html += "<p>None</p>"
+}
 
     $html += "</table>"
+
+    #
+    # Delegation
+    #
+
+    $html += "<h2>Delegation</h2>"
+
+$html += @"
+
+<table>
+
+<tr>
+
+<th>Trustee</th>
+
+<th>Permission</th>
+
+<th>Inherited</th>
+
+</tr>
+
+"@
+
+foreach($Entry in $Delegation)
+{
+    $html += @"
+
+<tr>
+
+<td>$($Entry.Trustee)</td>
+
+<td>$($Entry.Permission)</td>
+
+<td>$($Entry.Inherited)</td>
+
+</tr>
+
+"@
+}
+
+$html += "</table>"
 
     #
     # Policies
@@ -285,17 +474,32 @@ th, td {
                     default {""}
                 }
 
+                $html += "<h2>User Configuration</h2>"
+
+$html += @"
+
+<p>
+
+No configured settings.
+
+</p>
+
+"@
+
                 $html += @"
 
-<div class='policy'>
+<details class='policy'>
+
+<summary>
 
 <b>$($Policy.Name)</b>
 
-<br>
-
+-
 <span class='$stateClass'>
 $($Policy.State)
 </span>
+
+</summary>
 
 "@
 
@@ -314,9 +518,31 @@ $($Setting.Value)
 </div>
 
 "@
+if($Policy.Explain)
+{
+    $html += @"
+
+<details>
+
+<summary>
+
+Explanation
+
+</summary>
+
+<pre>
+
+$($Policy.Explain)
+
+</pre>
+
+</details>
+
+"@
+}
                 }
 
-                $html += "</div>"
+                $html += "</details>"
             }
         }
     }
@@ -369,7 +595,10 @@ catch
 
 $General = Get-GPOGeneral $xml
 $Links = Get-GPOLinks $xml
+$SecurityFiltering = Get-GPOSecurityFiltering $xml
+$Delegation = Get-GPODelegation $xml
 $Policies = Get-AdministrativeTemplates $xml
+
 
 Write-Host ""
 Write-Host "GENERAL"
@@ -422,6 +651,8 @@ $OutputFile =
 Write-GPOHtmlReport `
     -General $General `
     -Links $Links `
+    -SecurityFiltering $SecurityFiltering `
+    -Delegation $Delegation `
     -Policies $Policies `
     -OutputPath $OutputFile
 
