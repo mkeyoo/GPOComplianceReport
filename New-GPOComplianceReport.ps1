@@ -572,6 +572,8 @@ if ($XmlPath)
     {
         throw "Failed to parse XML: $($_.Exception.Message)"
     }
+
+    $sections = Process-GPOXml $xml
 }
 else
 {
@@ -586,9 +588,7 @@ else
         throw "No linked GPOs found."
     }
 
-    $sections = Process-GPOXml $xml
-
- 
+}
  $html = @"
 <!DOCTYPE html>
 <html>
@@ -685,8 +685,6 @@ $html += @"
 </html>
 
 "@
-}
-
 $OutputFile = $OutputPath
 
 $html |
