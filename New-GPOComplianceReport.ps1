@@ -198,8 +198,6 @@ function Write-GPOHtmlSection {
 
 "@
 
-    $html += "<h1>$($General.Name)</h1>"
-
     $enabledPolicies =
     ($Policies |
         Where-Object State -eq "Enabled").Count
@@ -539,35 +537,65 @@ function Process-GPOXml {
 }
 
 
-if (!(Test-Path $XmlPath))
+if ($XmlPath)
 {
-    throw "File not found: $XmlPath"
+    #
+    # Developer mode
+    #
+
+    if (!(Test-Path $XmlPath))
+    {
+        throw "File not found: $XmlPath"
+    }
+
+    $file = Get-Item $XmlPath
+
+    if ($file.Length -eq 0)
+    {
+        throw "XML file is empty: $XmlPath"
+    }
+
+    $raw = Get-Content $XmlPath -Raw
+
+    if ([string]::IsNullOrWhiteSpace($raw))
+    {
+        throw "XML file contains no data: $XmlPath"
+    }
+
+    try
+    {
+        [xml]$xml = $raw
+    }
+    catch
+    {
+        throw "Failed to parse XML: $($_.Exception.Message)"
+    }
 }
-
-$file = Get-Item $XmlPath
-
-if ($file.Length -eq 0)
+else
 {
-    throw "XML file is empty: $XmlPath"
-}
+    #
+    # OU mode
+    #
 
-$raw = Get-Content $XmlPath -Raw
+    $LinkedGPOs = Get-LinkedGPOs $OU
 
-if ([string]::IsNullOrWhiteSpace($raw))
+    if (!$LinkedGPOs)
+    {
+        throw "No linked GPOs found."
+    }
+
+    $html = ""
+
+foreach ($LinkedGPO in $LinkedGPOs)
 {
-    throw "XML file contains no data: $XmlPath"
-}
 
-try
-{
-    [xml]$xml = $raw
-}
-catch
-{
-    throw "Failed to parse XML: $($_.Exception.Message)"
-}
+    [xml]$xml = Get-GPOReport `
+        -Guid $LinkedGPO.GpoId `
+        -ReportType Xml
 
-$html = Process-GPOXml $xml
+    $html += Process-GPOXml $xml
+}
+}
 
 $OutputFile = $OutputPath
 
