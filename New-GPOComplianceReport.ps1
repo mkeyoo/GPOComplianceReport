@@ -1,7 +1,24 @@
+Import-Module GroupPolicy -ErrorAction Stop
+
 param(
+
+    [string]$XmlPath,
+    
+    [string]$OU,
+
     [Parameter(Mandatory)]
-    [string]$XmlPath
+    [string]$OutputPath
 )
+
+if (-not $XmlPath -and -not $OU)
+{
+    throw "Specify either -XmlPath or -OU."
+}
+
+if ($XmlPath -and $OU)
+{
+    throw "Specify either -XmlPath or -OU, not both."
+}
 
 function Get-GPOGeneral {
 
@@ -559,6 +576,29 @@ $($Policy.Explain)
         Set-Content `
         -Path $OutputPath `
         -Encoding UTF8
+}
+
+function Get-LinkedGPOs {
+
+    param(
+        [string]$OU
+    )
+
+    $inheritance = Get-GPInheritance -Target $OU
+
+    return $inheritance.GpoLinks |
+        Where-Object { $_.Enabled }
+}
+
+function Get-GPOXml {
+
+    param(
+        [Guid]$Guid
+    )
+
+    [xml](Get-GPOReport `
+        -Guid $Guid `
+        -ReportType Xml)
 }
 
 $Policies | Format-List * | Out-String | Write-Host
