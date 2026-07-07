@@ -1,5 +1,3 @@
-Import-Module GroupPolicy -ErrorAction Stop
-
 param(
 
     [string]$XmlPath,
@@ -19,6 +17,8 @@ if ($XmlPath -and $OU)
 {
     throw "Specify either -XmlPath or -OU, not both."
 }
+
+Import-Module GroupPolicy -ErrorAction Stop
 
 function Get-GPOGeneral {
 
@@ -530,7 +530,7 @@ function Process-GPOXml {
 
     $Policies = Get-AdministrativeTemplates $Xml
 
-    return Write-GPOHtmlReport `
+    return Write-GPOHtmlSection `
         -General $General `
         -Links $Links `
         -SecurityFiltering $SecurityFiltering `
@@ -567,62 +567,9 @@ catch
     throw "Failed to parse XML: $($_.Exception.Message)"
 }
 
-$General = Get-GPOGeneral $xml
-$Links = Get-GPOLinks $xml
-$SecurityFiltering = Get-GPOSecurityFiltering $xml
-$Delegation = Get-GPODelegation $xml
-$Policies = Get-AdministrativeTemplates $xml
+$html = Process-GPOXml $xml
 
-
-Write-Host "-------"
-
-$General | Format-List
-
-Write-Host ""
-Write-Host "-----"
-
-$Links | Format-Table
-
-Write-Host ""
-Write-Host "========"
-
-
-foreach($Policy in $Policies)
-{
-    Write-Host ""
-    Write-Host "----------------------------------"
-
-    Write-Host "Category:    $($Policy.Category)"
-
-    Write-Host "SubCategory: $($Policy.SubCategory)"
-
-    Write-Host "Policy:      $($Policy.Name)"
-
-    Write-Host "State:       $($Policy.State)"
-
-    if($Policy.Settings.Count)
-    {
-        Write-Host ""
-        Write-Host "Settings:"
-
-        foreach($Setting in $Policy.Settings)
-        {
-            Write-Host "    $($Setting.Name) = $($Setting.Value)"
-        }
-    }
-}
-
-$OutputFile =
-    Join-Path `
-        $PSScriptRoot `
-        "Report.html"
-
-Write-GPOHtmlReport `
-    -General $General `
-    -Links $Links `
-    -SecurityFiltering $SecurityFiltering `
-    -Delegation $Delegation `
-    -Policies $Policies
+$OutputFile = $OutputPath
 
 $html |
     Set-Content `
