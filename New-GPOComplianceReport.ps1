@@ -536,6 +536,8 @@ function Process-GPOXml {
         -Policies $Policies
 }
 
+$toc = ""
+$sections = ""
 
 if ($XmlPath)
 {
@@ -584,17 +586,105 @@ else
         throw "No linked GPOs found."
     }
 
-    $html = ""
+    $sections = Process-GPOXml $xml
+
+ 
+ $html = @"
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>GPO Compliance Report</title>
+
+<style>
+
+body {
+    font-family: Segoe UI, Arial, sans-serif;
+    margin: 20px;
+}
+
+table {
+    border-collapse: collapse;
+    margin-bottom: 15px;
+}
+
+th, td {
+    border: 1px solid #ccc;
+    padding: 4px 8px;
+    vertical-align: top;
+}
+
+details {
+    margin-bottom: 10px;
+}
+
+summary {
+    cursor: pointer;
+    font-weight: bold;
+}
+
+section.gpo {
+    margin-bottom: 40px;
+    border-bottom: 2px solid #ccc;
+    padding-bottom: 20px;
+}
+
+</style>
+
+</head>
+<body>
+
+<h1>GPO Compliance Report</h1>
+
+<p><strong>OU:</strong> $OU</p>
+
+<p><strong>Generated:</strong> $(Get-Date)</p>
+
+<hr/>
+
+"@
+
+
+$toc = @"
+<h2>Contents</h2>
+<ul>
+"@
+
+$sections = ""
 
 foreach ($LinkedGPO in $LinkedGPOs)
 {
+    Write-Host "Processing $($LinkedGPO.DisplayName)..."
 
-    [xml]$xml = Get-GPOReport `
-        -Guid $LinkedGPO.GpoId `
-        -ReportType Xml
+    [xml]$xml = Get-GPOXml -Guid $LinkedGPO.GpoId
 
-    $html += Process-GPOXml $xml
+    $Anchor = $LinkedGPO.DisplayName -replace '[^A-Za-z0-9]', '_'
+
+    $toc += "<li><a href='#$Anchor'>$($LinkedGPO.DisplayName)</a></li>`n"
+
+    $sections += Process-GPOXml $xml
+    
+    Write-Host "Process-GPOXml returned $($sections.Length) characters."
 }
+
+$toc += @"
+</ul>
+<hr/>
+"@
+
+Write-Host ""
+Write-Host "TOC length: $($toc.Length)"
+Write-Host "Sections length: $($sections.Length)"
+
+$html += $toc
+$html += $sections
+
+$html += @"
+
+</body>
+</html>
+
+"@
 }
 
 $OutputFile = $OutputPath
