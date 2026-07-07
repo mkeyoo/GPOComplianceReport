@@ -178,100 +178,23 @@ function Get-AdministrativeTemplates {
     return $policies
 }
 
-function Write-GPOHtmlReport {
+function Write-GPOHtmlSection {
 
     param(
         $General,
         $Links,
         $SecurityFiltering,
         $Delegation,
-        $Policies,
-        $OutputPath
+        $Policies
     )
 
-    $html = @"
+ $html = @"
 
-<!DOCTYPE html>
+<section class='gpo'>
 
-<html>
+<a id='$($General.Name.Replace(" ","_"))'></a>
 
-<head>
-
-<meta charset="utf-8">
-
-<title>$($General.Name)</title>
-
-<style>
-
-body {
-    font-family: Segoe UI, Arial;
-    margin: 20px;
-}
-
-h1 {
-    border-bottom: 2px solid black;
-}
-
-h2 {
-    margin-top: 30px;
-    border-bottom: 1px solid gray;
-}
-
-h3 {
-    margin-left: 20px;
-}
-
-h4 {
-    margin-left: 40px;
-}
-
-.policy {
-    margin-left: 40px;
-    margin-top: 10px;
-    margin-bottom: 10px;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-}
-
-summary {
-    cursor: pointer;
-    font-weight: bold;
-}
-
-.setting {
-    margin-left: 20px;
-    margin-top: 5px;
-}
-
-.setting {
-    margin-left: 20px;
-}
-
-.enabled {
-    color: green;
-    font-weight: bold;
-}
-
-.disabled {
-    color: red;
-    font-weight: bold;
-}
-
-table {
-    border-collapse: collapse;
-}
-
-th, td {
-    border: 1px solid #ccc;
-    padding: 5px;
-}
-
-</style>
-
-</head>
-
-<body>
+<h1>$($General.Name)</h1>
 
 "@
 
@@ -491,17 +414,6 @@ $html += "</table>"
                     default {""}
                 }
 
-                $html += "<h2>User Configuration</h2>"
-
-$html += @"
-
-<p>
-
-No configured settings.
-
-</p>
-
-"@
 
                 $html += @"
 
@@ -564,18 +476,19 @@ $($Policy.Explain)
         }
     }
 
-    $html += @"
+$html += "<h2>User Configuration</h2>"
 
-</body>
+$html += @"
 
-</html>
+<p>
+
+No configured settings.
+
+</p>
 
 "@
 
-    $html |
-        Set-Content `
-        -Path $OutputPath `
-        -Encoding UTF8
+return $html
 }
 
 function Get-LinkedGPOs {
@@ -601,9 +514,30 @@ function Get-GPOXml {
         -ReportType Xml)
 }
 
-$Policies | Format-List * | Out-String | Write-Host
+function Process-GPOXml {
 
-[xml]$xml = Get-Content $XmlPath
+    param(
+        [xml]$Xml
+    )
+
+    $General = Get-GPOGeneral $Xml
+
+    $Links = Get-GPOLinks $Xml
+
+    $SecurityFiltering = Get-GPOSecurityFiltering $Xml
+
+    $Delegation = Get-GPODelegation $Xml
+
+    $Policies = Get-AdministrativeTemplates $Xml
+
+    return Write-GPOHtmlReport `
+        -General $General `
+        -Links $Links `
+        -SecurityFiltering $SecurityFiltering `
+        -Delegation $Delegation `
+        -Policies $Policies
+}
+
 
 if (!(Test-Path $XmlPath))
 {
@@ -640,23 +574,18 @@ $Delegation = Get-GPODelegation $xml
 $Policies = Get-AdministrativeTemplates $xml
 
 
-Write-Host ""
-Write-Host "GENERAL"
 Write-Host "-------"
 
 $General | Format-List
 
 Write-Host ""
-Write-Host "LINKS"
 Write-Host "-----"
 
 $Links | Format-Table
 
 Write-Host ""
-Write-Host "POLICIES"
 Write-Host "========"
 
-$Policies | Format-List * | Out-String | Write-Host
 
 foreach($Policy in $Policies)
 {
@@ -693,8 +622,12 @@ Write-GPOHtmlReport `
     -Links $Links `
     -SecurityFiltering $SecurityFiltering `
     -Delegation $Delegation `
-    -Policies $Policies `
-    -OutputPath $OutputFile
+    -Policies $Policies
+
+$html |
+    Set-Content `
+    -Path $OutputFile `
+    -Encoding UTF8
 
 Write-Host ""
 Write-Host "HTML report written to:"
