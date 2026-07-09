@@ -316,7 +316,9 @@ $html += @"
 
 "@
     }
-   
+
+$html += "</table>"
+    
     #
     # Security Filtering
     #
@@ -339,7 +341,6 @@ else
     $html += "<p>None</p>"
 }
 
-    $html += "</table>"
 
     #
     # Delegation
@@ -430,9 +431,9 @@ $($Policy.State)
 
 "@
 
-                foreach($Setting in $Policy.Settings)
-                {
-                    $html += @"
+foreach($Setting in $Policy.Settings)
+{
+    $html += @"
 
 <div class='setting'>
 
@@ -445,6 +446,8 @@ $($Setting.Value)
 </div>
 
 "@
+}
+
 if($Policy.Explain)
 {
     $html += @"
@@ -467,7 +470,7 @@ $($Policy.Explain)
 
 "@
 }
-                }
+                
 
                 $html += "</details>"
             }
@@ -485,6 +488,8 @@ No configured settings.
 </p>
 
 "@
+
+$html += "</section>"
 
 return $html
 }
@@ -598,6 +603,17 @@ else
 
 <style>
 
+h1 {
+    border-bottom: 2px solid #4472C4;
+    padding-bottom: 6px;
+    margin-bottom: 15px;
+}
+
+h2 {
+    margin-top: 25px;
+    padding-left: 8px;
+}
+
 body {
     font-family: Segoe UI, Arial, sans-serif;
     margin: 20px;
@@ -608,10 +624,16 @@ table {
     margin-bottom: 15px;
 }
 
-th, td {
+th,
+td {
     border: 1px solid #ccc;
     padding: 4px 8px;
     vertical-align: top;
+    text-align: left;
+}
+
+tr:nth-child(even) {
+    background: #f9f9f9;
 }
 
 details {
@@ -624,9 +646,9 @@ summary {
 }
 
 section.gpo {
-    margin-bottom: 40px;
-    border-bottom: 2px solid #ccc;
+    margin-bottom: 30px;
     padding-bottom: 20px;
+    border-bottom: 2px solid #d0d0d0;
 }
 
 </style>
@@ -649,8 +671,6 @@ $toc = @"
 <h2>Contents</h2>
 <ul>
 "@
-
-$sections = ""
 
 foreach ($LinkedGPO in $LinkedGPOs)
 {
