@@ -178,6 +178,94 @@ function Get-AdministrativeTemplates {
     return $policies
 }
 
+function Get-SecuritySettings {
+    param([xml]$Xml)
+
+    $Policies = @()
+
+    foreach($ExtensionData in $Xml.GPO.Computer.ExtensionData)
+    {
+        if($ExtensionData.Name -ne "Security")
+        {
+            continue
+        }
+
+        foreach($Option in $ExtensionData.Extension.SecurityOptions)
+        {
+            switch([int]$Option.SettingNumber)
+            {
+                0 { $State = "Disabled" }
+                1 { $State = "Enabled"  }
+                default { $State = $Option.SettingNumber }
+            }
+
+            $Policies += [PSCustomObject]@{
+
+                Type        = "SecurityOption"
+
+                Category    = "Security Settings"
+
+                SubCategory = "Security Options"
+
+                Name        = $Option.Display.Name
+
+                State       = $State
+
+                Explain     = $null
+
+                Settings    = @()
+            }
+        }
+    }
+
+    return $Policies
+}
+
+function Get-AuditSettings {
+    param([xml]$Xml)
+
+    $Policies = @()
+
+    foreach($ExtensionData in $Xml.GPO.Computer.ExtensionData)
+    {
+        if($ExtensionData.Name -ne "Advanced Audit Configuration")
+        {
+            continue
+        }
+
+        foreach($Audit in $ExtensionData.Extension.AuditSetting)
+        {
+            switch([int]$Audit.SettingValue)
+            {
+                0 { $State = "No Auditing" }
+                1 { $State = "Success" }
+                2 { $State = "Failure" }
+                3 { $State = "Success and Failure" }
+                default { $State = $Audit.SettingValue }
+            }
+
+            $Policies += [PSCustomObject]@{
+
+                Type        = "Audit"
+
+                Category    = "Security Settings"
+
+                SubCategory = "Advanced Audit Policy"
+
+                Name        = $Audit.SubcategoryName
+
+                State       = $State
+
+                Explain     = $null
+
+                Settings    = @()
+            }
+        }
+    }
+
+    return $Policies
+}
+
 function Write-GPOHtmlSection {
 
     param(
@@ -202,11 +290,11 @@ function Write-GPOHtmlSection {
     ($Policies |
         Where-Object State -eq "Enabled").Count
 
-$disabledPolicies =
+    $disabledPolicies =
     ($Policies |
         Where-Object State -eq "Disabled").Count
 
-$configuredSettings = 0
+    $configuredSettings = 0
 
 foreach($Policy in $Policies)
 {
@@ -414,26 +502,25 @@ $html += "</table>"
                 }
 
 
-                $html += @"
+$html += @"
 
-<details class='policy'>
+<div class='policy'>
 
-<summary>
+<h5>
 
-<b>$($Policy.Name)</b>
+$($Policy.Name)
 
--
 <span class='$stateClass'>
 $($Policy.State)
 </span>
 
-</summary>
+</h5>
 
 "@
 
 foreach($Setting in $Policy.Settings)
 {
-    $html += @"
+$html += @"
 
 <div class='setting'>
 
@@ -450,7 +537,7 @@ $($Setting.Value)
 
 if($Policy.Explain)
 {
-    $html += @"
+$html += @"
 
 <details>
 
@@ -470,9 +557,8 @@ $($Policy.Explain)
 
 "@
 }
-                
 
-                $html += "</details>"
+$html += "</div>"
             }
         }
     }
@@ -531,7 +617,11 @@ function Process-GPOXml {
 
     $Delegation = Get-GPODelegation $Xml
 
-    $Policies = Get-AdministrativeTemplates $Xml
+    $Policies = @()
+
+    $Policies += @(Get-AdministrativeTemplates $Xml)
+    $Policies += @(Get-SecuritySettings $Xml)
+    $Policies += @(Get-AuditSettings $Xml)
 
     return Write-GPOHtmlSection `
         -General $General `
@@ -638,6 +728,18 @@ tr:nth-child(even) {
 
 details {
     margin-bottom: 10px;
+}
+
+.policy {
+    margin-bottom: 15px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #fafafa;
+}
+
+.policy h5 {
+    margin: 0 0 8px 0;
 }
 
 summary {

@@ -1,81 +1,140 @@
-﻿
-<!DOCTYPE html>
-
+﻿<!DOCTYPE html>
 <html>
-
 <head>
-
 <meta charset="utf-8">
-
-<title>AutoPlay Compliance</title>
+<title>GPO Compliance Report</title>
 
 <style>
 
-body {
-    font-family: Segoe UI, Arial;
-    margin: 20px;
-}
-
 h1 {
-    border-bottom: 2px solid black;
+    border-bottom: 2px solid #4472C4;
+    padding-bottom: 6px;
+    margin-bottom: 15px;
 }
 
 h2 {
-    margin-top: 30px;
-    border-bottom: 1px solid gray;
+    margin-top: 25px;
+    padding-left: 8px;
 }
 
-h3 {
-    margin-left: 20px;
-}
-
-h4 {
-    margin-left: 40px;
-}
-
-.policy {
-    margin-left: 60px;
-    margin-bottom: 15px;
-    padding: 10px;
-    border-left: 3px solid #888;
-}
-
-.setting {
-    margin-left: 20px;
-}
-
-.enabled {
-    color: green;
-    font-weight: bold;
-}
-
-.disabled {
-    color: red;
-    font-weight: bold;
+body {
+    font-family: Segoe UI, Arial, sans-serif;
+    margin: 20px;
 }
 
 table {
     border-collapse: collapse;
+    margin-bottom: 15px;
 }
 
-th, td {
+th,
+td {
     border: 1px solid #ccc;
-    padding: 5px;
+    padding: 4px 8px;
+    vertical-align: top;
+    text-align: left;
+}
+
+tr:nth-child(even) {
+    background: #f9f9f9;
+}
+
+details {
+    margin-bottom: 10px;
+}
+
+.policy {
+    margin-bottom: 15px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #fafafa;
+}
+
+.policy h5 {
+    margin: 0 0 8px 0;
+}
+
+summary {
+    cursor: pointer;
+    font-weight: bold;
+}
+
+section.gpo {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #d0d0d0;
 }
 
 </style>
 
 </head>
-
 <body>
-<h1>AutoPlay Compliance</h1><h2>General</h2>
+
+<h1>GPO Compliance Report</h1>
+
+<p><strong>OU:</strong> </p>
+
+<p><strong>Generated:</strong> 07/13/2026 13:09:25</p>
+
+<hr/>
+<h2>Contents</h2>
+<ul></ul>
+<hr/>
+<section class='gpo'>
+
+<a id='Security_Event_Audit_Compliance'></a>
+
+<h1>Security Event Audit Compliance</h1>
+
+<h2>Summary</h2>
+
+<table>
+
+<tr>
+    <th>Generated</th>
+    <td>07/13/2026 13:09:25</td>
+</tr>
+
+<tr>
+    <th>Policy Count</th>
+    <td>27</td>
+</tr>
+
+<tr>
+    <th>Configured Settings</th>
+    <td>0</td>
+</tr>
+
+<tr>
+    <th>Enabled Policies</th>
+    <td>2</td>
+</tr>
+
+<tr>
+    <th>Disabled Policies</th>
+    <td>0</td>
+</tr>
+
+<tr>
+    <th>Links</th>
+    <td></td>
+</tr>
+
+<tr>
+    <th>Enforced Links</th>
+    <td></td>
+</tr>
+
+</table>
+<h2>General</h2>
 <table>
 
 <tr><th>Owner</th><td>GRIT\Domain Admins</td></tr>
 
-<tr><th>Created</th><td>05/18/2026 20:15:14</td></tr>
+<tr><th>Created</th><td>06/05/2026 18:09:34</td></tr>
 
-<tr><th>Modified</th><td>05/18/2026 20:18:04</td></tr>
+<tr><th>Modified</th><td>06/09/2026 21:44:57</td></tr>
 
 <tr><th>Status</th><td>Enabled</td></tr>
 
@@ -96,58 +155,424 @@ th, td {
     <td>True</td>
     <td>True</td>
 </tr>
-</table><h2>Computer Configuration</h2><h3>Windows Components</h3><h4>AutoPlay Policies</h4>
+</table><h2>Security Filtering</h2><ul><li>NT AUTHORITY\Authenticated Users</li></ul><h2>Delegation</h2>
+<table>
+
+<tr>
+
+<th>Trustee</th>
+
+<th>Permission</th>
+
+<th>Inherited</th>
+
+</tr>
+
+<tr>
+
+<td>GRIT\Enterprise Admins</td>
+
+<td>Edit, delete, modify security</td>
+
+<td>false</td>
+
+</tr>
+
+<tr>
+
+<td>NT AUTHORITY\ENTERPRISE DOMAIN CONTROLLERS</td>
+
+<td>Read</td>
+
+<td>false</td>
+
+</tr>
+
+<tr>
+
+<td>NT AUTHORITY\SYSTEM</td>
+
+<td>Edit, delete, modify security</td>
+
+<td>false</td>
+
+</tr>
+
+<tr>
+
+<td>NT AUTHORITY\Authenticated Users</td>
+
+<td>Apply Group Policy</td>
+
+<td>false</td>
+
+</tr>
+
+<tr>
+
+<td>GRIT\Domain Admins</td>
+
+<td>Edit, delete, modify security</td>
+
+<td>false</td>
+
+</tr>
+</table><h2>Computer Configuration</h2><h3>System</h3><h4>Audit Process Creation</h4>
 <div class='policy'>
 
-<b>Disallow Autoplay for non-volume devices</b>
+<h5>
 
-<br>
+Include command line in process creation events
 
 <span class='enabled'>
 Enabled
 </span>
-</div>
+
+</h5>
+
+<details>
+
+<summary>
+
+Explanation
+
+</summary>
+
+<pre>
+
+This policy setting determines what information is logged in security audit events when a new process has been created.
+
+This setting only applies when the Audit Process Creation policy is enabled. If you enable this policy setting the command line information for every process will be logged in plain text in the security event log as part of the Audit Process Creation event 4688, "a new process has been created," on the workstations and servers on which this policy setting is applied.
+
+If you disable or do not configure this policy setting, the process's command line information will not be included in Audit Process Creation events.
+
+Default: Not configured
+
+Note: When this policy setting is enabled, any user with access to read the security events will be able to read the command line arguments for any successfully created process. Command line arguments can contain sensitive or private information such as passwords or user data.
+      
+
+</pre>
+
+</details>
+</div><h3>Security Settings</h3><h4>Security Options</h4>
 <div class='policy'>
 
-<b>Set the default behavior for AutoRun</b>
+<h5>
 
-<br>
+Audit: Force audit policy subcategory settings (Windows Vista or later) to override audit policy category settings
 
 <span class='enabled'>
 Enabled
 </span>
 
-<div class='setting'>
+</h5>
+</div><h4>Advanced Audit Policy</h4>
+<div class='policy'>
 
-<b>Default AutoRun Behavior</b>
+<h5>
 
-<br>
+Audit Credential Validation
 
-Do not execute any autorun commands
+<span class=''>
+Success and Failure
+</span>
 
-</div>
+</h5>
 </div>
 <div class='policy'>
 
-<b>Turn off Autoplay</b>
+<h5>
 
-<br>
+Audit Other Account Management Events
 
-<span class='enabled'>
-Enabled
+<span class=''>
+Success and Failure
 </span>
 
-<div class='setting'>
-
-<b>Turn off Autoplay on:</b>
-
-<br>
-
-All drives
-
+</h5>
 </div>
+<div class='policy'>
+
+<h5>
+
+Audit Security Group Management
+
+<span class=''>
+Success
+</span>
+
+</h5>
 </div>
+<div class='policy'>
+
+<h5>
+
+Audit User Account Management
+
+<span class=''>
+Success and Failure
+</span>
+
+</h5>
+</div>
+<div class='policy'>
+
+<h5>
+
+Audit PNP Activity
+
+<span class=''>
+Success
+</span>
+
+</h5>
+</div>
+<div class='policy'>
+
+<h5>
+
+Audit Process Creation
+
+<span class=''>
+Success
+</span>
+
+</h5>
+</div>
+<div class='policy'>
+
+<h5>
+
+Audit Account Lockout
+
+<span class=''>
+Failure
+</span>
+
+</h5>
+</div>
+<div class='policy'>
+
+<h5>
+
+Audit Group Membership
+
+<span class=''>
+Success
+</span>
+
+</h5>
+</div>
+<div class='policy'>
+
+<h5>
+
+Audit Logoff
+
+<span class=''>
+Success
+</span>
+
+</h5>
+</div>
+<div class='policy'>
+
+<h5>
+
+Audit Logon
+
+<span class=''>
+Success and Failure
+</span>
+
+</h5>
+</div>
+<div class='policy'>
+
+<h5>
+
+Audit Special Logon
+
+<span class=''>
+Success
+</span>
+
+</h5>
+</div>
+<div class='policy'>
+
+<h5>
+
+Audit File System
+
+<span class=''>
+Success and Failure
+</span>
+
+</h5>
+</div>
+<div class='policy'>
+
+<h5>
+
+Audit Handle Manipulation
+
+<span class=''>
+Success and Failure
+</span>
+
+</h5>
+</div>
+<div class='policy'>
+
+<h5>
+
+Audit Other Object Access Events
+
+<span class=''>
+Success and Failure
+</span>
+
+</h5>
+</div>
+<div class='policy'>
+
+<h5>
+
+Audit Registry
+
+<span class=''>
+Success and Failure
+</span>
+
+</h5>
+</div>
+<div class='policy'>
+
+<h5>
+
+Audit Removable Storage
+
+<span class=''>
+Success and Failure
+</span>
+
+</h5>
+</div>
+<div class='policy'>
+
+<h5>
+
+Audit Audit Policy Change
+
+<span class=''>
+Success and Failure
+</span>
+
+</h5>
+</div>
+<div class='policy'>
+
+<h5>
+
+Audit Authentication Policy Change
+
+<span class=''>
+Success
+</span>
+
+</h5>
+</div>
+<div class='policy'>
+
+<h5>
+
+Audit Authorization Policy Change
+
+<span class=''>
+Success
+</span>
+
+</h5>
+</div>
+<div class='policy'>
+
+<h5>
+
+Audit Sensitive Privilege Use
+
+<span class=''>
+Success and Failure
+</span>
+
+</h5>
+</div>
+<div class='policy'>
+
+<h5>
+
+Audit IPsec Driver
+
+<span class=''>
+Success and Failure
+</span>
+
+</h5>
+</div>
+<div class='policy'>
+
+<h5>
+
+Audit Other System Events
+
+<span class=''>
+Success and Failure
+</span>
+
+</h5>
+</div>
+<div class='policy'>
+
+<h5>
+
+Audit Security State Change
+
+<span class=''>
+Success
+</span>
+
+</h5>
+</div>
+<div class='policy'>
+
+<h5>
+
+Audit Security System Extension
+
+<span class=''>
+Success
+</span>
+
+</h5>
+</div>
+<div class='policy'>
+
+<h5>
+
+Audit System Integrity
+
+<span class=''>
+Success and Failure
+</span>
+
+</h5>
+</div><h2>User Configuration</h2>
+<p>
+
+No configured settings.
+
+</p>
+</section>
 </body>
-
 </html>
 
