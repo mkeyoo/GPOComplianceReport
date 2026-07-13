@@ -409,9 +409,12 @@ $html += "</table>"
             {
                 $stateClass = switch($Policy.State)
                 {
-                    "Enabled" {"enabled"}
-                    "Disabled" {"disabled"}
-                    default {""}
+                "Enabled"              { "enabled" }
+                "Disabled"             { "disabled" }
+                "Success"              { "success" }
+                "Failure"              { "failure" }
+                "Success and Failure"  { "successfailure" }
+                default                { "" }
                 }
 
 
@@ -421,12 +424,16 @@ $html += "</table>"
 
 <summary>
 
+<<<<<<< Updated upstream
 <b>$($Policy.Name)</b>
 
 -
 <span class='$stateClass'>
 $($Policy.State)
 </span>
+=======
+$($Policy.Name) <span class='$stateClass'>($($Policy.State))</span>
+>>>>>>> Stashed changes
 
 </summary>
 
@@ -488,6 +495,19 @@ No configured settings.
 
 "@
 
+<<<<<<< Updated upstream
+=======
+$html += @"
+
+<p style='text-align:right; margin-top:20px;'>
+<a href='#top'>Return to Table of Contents</a>
+</p>
+
+"@
+
+$html += "</section>"
+
+>>>>>>> Stashed changes
 return $html
 }
 
@@ -553,7 +573,102 @@ if ($file.Length -eq 0)
 
 $raw = Get-Content $XmlPath -Raw
 
+<<<<<<< Updated upstream
 if ([string]::IsNullOrWhiteSpace($raw))
+=======
+body {
+    font-family: Segoe UI, Arial, sans-serif;
+    margin: 20px;
+}
+
+table {
+    border-collapse: collapse;
+    margin-bottom: 15px;
+}
+
+th,
+td {
+    border: 1px solid #ccc;
+    padding: 4px 8px;
+    vertical-align: top;
+    text-align: left;
+}
+
+tr:nth-child(even) {
+    background: #f9f9f9;
+}
+
+details {
+    margin-bottom: 10px;
+}
+
+.policy {
+    margin: 0 0 8px 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+}
+
+.policy h5 {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+}
+
+.policy-state {
+    font-weight: normal;
+    color: #555;
+    white-space: nowrap;
+}
+
+.success {
+    color: #2e7d32;
+}
+
+.failure {
+    color: #c62828;
+}
+
+.successfailure {
+    color: #1565c0;
+}
+
+summary {
+    cursor: pointer;
+    font-weight: bold;
+}
+
+section.gpo {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #d0d0d0;
+}
+
+</style>
+
+</head>
+<body>
+<a id="top"></a>
+
+<h1>GPO Compliance Report</h1>
+
+<p><strong>OU:</strong> $OU</p>
+
+<p><strong>Generated:</strong> $(Get-Date)</p>
+
+<hr/>
+
+"@
+
+
+$toc = @"
+<h2>Contents</h2>
+<ul>
+"@
+
+foreach ($LinkedGPO in $LinkedGPOs)
+>>>>>>> Stashed changes
 {
     throw "XML file contains no data: $XmlPath"
 }
